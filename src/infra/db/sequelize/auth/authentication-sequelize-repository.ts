@@ -9,7 +9,7 @@ export class AuthenticationSequelizeRepository implements AuthenticationReposito
 
     async loadUserInformation (request: LoadInformationUserAccountToUserCodeRepository.Request): Promise<LoadInformationUserAccountToUserCodeRepository.Response | null> {
     const { userCode } = request
-    const sql = `SELECT * FROM users WHERE userCode = :userCode`
+    const sql = `EXEC sp_get_user_full_data @USERCODE = :userCode`
     const replacements = {
       userCode: new String(userCode)
     }
