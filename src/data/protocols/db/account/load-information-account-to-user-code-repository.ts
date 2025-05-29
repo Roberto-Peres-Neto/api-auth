@@ -6,5 +6,5 @@ export interface LoadInformationUserAccountToUserCodeRepository {
 
 export namespace LoadInformationUserAccountToUserCodeRepository {
   export type Request = ILoadInformationUserAccountToUserCodeRequest
-  export type Response = ILoadInformationUserAccountToUserCodeResponse
+  export type Response = ILoadInformationUserAccountToUserCodeResponse[]
 }

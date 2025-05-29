@@ -9,16 +9,75 @@ export class AuthenticationSequelizeRepository implements AuthenticationReposito
 
     async loadUserInformation (request: LoadInformationUserAccountToUserCodeRepository.Request): Promise<LoadInformationUserAccountToUserCodeRepository.Response | null> {
     const { userCode } = request
-    const sql = `EXEC sp_get_user_full_data @USERCODE = :userCode`
+    const sql = `
+        SELECT 
+        -- LOGIN_SYSTEM
+        L.USER_CODE userCode,
+        L.LOGIN email,
+        L.ACCOUNT_STATUS accountStatus,
+        L.PASSWORD_EXPIRE passwordExpire,
+        L.ACCOUNT_EXPIRE accountExpire,
+
+        -- USER_PERSONAL_INFORMATION
+        P.COMPLETE_NAME completeName,
+        P.NICKNAME nickname,
+        P.EMAIL_PERSONAL emailPersonal,
+        P.CPF cpf,
+        P.RG tg,
+        P.CNH cnh,
+        P.VOTER_REGISTRATION voterRegistration,
+        P.EMPLOY_CONTRACT employContract,
+        P.PHONE phone,
+        P.DATE_OF_BIRD dateOfBirth,
+
+        -- USER_ADDRESS_INFORMATION
+        A.STREET street,
+        A.NUMBER number,
+        A.NEIGHBORHOOD neighborhood,
+        A.CITY city,
+        A.STATE [state],
+
+        -- USER_RELATIVES
+        R.FATHER_NAME fatherName,
+        R.MOTHER_NAME motherName,
+        R.WIFE_NAME wifeName,
+        R.HOW_MANY_BROTHERS howManyBrothers,
+        R.HOW_MANY_CHILDREN howManyChildren,
+
+        -- USER_EMPLOY_DETAILS
+        E.EMAIL_CORPORATIVE emailCorporate,
+        E.ADMISSION_DATE admissionDate,
+        E.POSITION position,
+        E.CURRENT_SALARY currentSalary,
+        E.NEXT_SALARY_VALUE nextSalaryValue,
+        E.NEXT_INCREASE_DATE nextSalaryDate,
+        E.WORK_SHIFT workShift,
+        E.COST_CENTER_CODE costCenterCode,
+        E.COST_CENTER_DESCRIPTION costCenterDescription,
+        E.LUNCH_BREAK_DURATION lunchBreakDuration,
+        E.LUNCH_BREAK_START lunchBreakStart,
+        E.LUNCH_BREAK_END lunchBreakEnd
+
+      FROM LOGIN_SYSTEM L
+      INNER JOIN USER_PERSONAL_INFORMATION P ON L.USER_CODE = P.USER_CODE
+      INNER JOIN USER_ADDRESS_INFORMATION A ON L.USER_CODE = A.USER_CODE
+      INNER JOIN USER_RELATIVES R ON L.USER_CODE = R.USER_CODE
+      INNER JOIN USER_EMPLOY_DETAILS E ON L.USER_CODE = E.USER_CODE
+
+      WHERE L.DL = '' AND P.DL = '' AND A.DL = '' AND R.DL = '' AND E.DL = ''
+        AND L.ACCOUNT_STATUS = 'ATIVO'
+        AND L.USER_CODE = :userCode
+    `
     const replacements = {
       userCode: new String(userCode)
     }
-    const dbResult = await this.sequelize.query<LoadInformationUserAccountToUserCodeRepository.Response>(sql, replacements)
-    if (!dbResult || dbResult.length === 0) {
+    const dbResult = await this.sequelize.query<LoadInformationUserAccountToUserCodeRepository.Response[0]>(sql, replacements)
+    if (!dbResult ) {
       return null
     }
     console.log('O QUE TEM AQUI : ', dbResult)
-    return dbResult[0]
+
+    return dbResult
   }
 
 
