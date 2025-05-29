@@ -13,12 +13,12 @@ export class AuthenticationSequelizeRepository implements AuthenticationReposito
     const replacements = {
       userCode: new String(userCode)
     }
-    const [dbResult] = await this.sequelize.query<LoadInformationUserAccountToUserCodeRepository.Response>(sql, replacements)
-    if (!dbResult ) {
+    const dbResult = await this.sequelize.query<LoadInformationUserAccountToUserCodeRepository.Response>(sql, replacements)
+    if (!dbResult || dbResult.length === 0) {
       return null
     }
     console.log('O QUE TEM AQUI : ', dbResult)
-    return dbResult
+    return dbResult[0]
   }
 
 
