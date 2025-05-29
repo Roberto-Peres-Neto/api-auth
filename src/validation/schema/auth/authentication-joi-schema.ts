@@ -6,7 +6,7 @@ export const authenticationModelJoiSchema = Joi.object < AuthenticationAccountMo
   accessToken: Joi.string().required(),
   accountStatus: Joi.string().required(),
   email: Joi.string().required(),
-  name: Joi.string().required(),
+  accountExpire: Joi.string().allow(null).required(),
   userCode: Joi.string().required()
 })
 export const loadLoginControllerJoiSchema = Joi.object < LoadLoginController.Request, true, LoadLoginController.Request>({
