@@ -5,7 +5,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint . --ext .ts",
-    "check": "npm-check -s -u"
+    "check": "npm-check -s -u",
+    "dev": "ts-node-dev --respawn --transpile-only src/main/server.ts"
   },
   "repository": {
     "type": "git",
@@ -24,6 +25,7 @@
     "@types/express": "^5.0.2",
     "@types/joi": "^17.2.3",
     "@types/jsonwebtoken": "^9.0.9",
+    "@types/module-alias": "^2.0.4",
     "@types/node": "^22.15.21",
     "@typescript-eslint/eslint-plugin": "^8.32.1",
     "@typescript-eslint/parser": "^8.32.1",
@@ -35,11 +37,12 @@
     "typescript-eslint": "^8.32.1"
   },
   "dependencies": {
-    "@rpn-solution/utils-lib": "^0.0.10",
+    "@rpn-solution/utils-lib": "^0.0.17",
     "dotenv": "^16.5.0",
     "joi": "^17.13.3",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.15.0",
+    "module-alias": "^2.2.3",
+    "mongoose": "^8.15.1",
     "mssql": "^11.0.1",
     "utils-lib": "git+https://github.com/Roberto-Peres-Neto/utils-lib.git"
   }

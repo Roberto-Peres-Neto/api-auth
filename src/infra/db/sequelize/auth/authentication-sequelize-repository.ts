@@ -13,18 +13,19 @@ export class AuthenticationSequelizeRepository implements AuthenticationReposito
     const replacements = {
       userCode: new String(userCode)
     }
-    const dbResult = await this.sequelize.query<LoadInformationUserAccountToUserCodeRepository.Response>(sql, replacements)
-    if (!dbResult || dbResult.length === 0) {
+    const [dbResult] = await this.sequelize.query<LoadInformationUserAccountToUserCodeRepository.Response>(sql, replacements)
+    if (!dbResult ) {
       return null
     }
-    return dbResult[0]
+    console.log('O QUE TEM AQUI : ', dbResult)
+    return dbResult
   }
 
 
 async authentication (request: AuthenticationRepository.Request): Promise<AuthenticationRepository.Response | null> {    
   const { email, password } = request
-    const sql = `SELECT * FROM users WHERE email = :email AND password = :password`
-    
+    const sql = `SELECT LOGIN email, USER_CODE userCode, ACCOUNT_STATUS accountStatus, ACCOUNT_EXPIRE accountExpire FROM LOGIN_SYSTEM WHERE LOGIN = :email AND PASSWORD = :password`
+    console.log('SQL', sql)
     const replacements = {
       email: new String(email),
       password: new String(password)
@@ -35,7 +36,7 @@ async authentication (request: AuthenticationRepository.Request): Promise<Authen
     if (!dbResult || dbResult.length === 0) {
       return null
     }
-
+    console.log('dbResult', dbResult)
     return dbResult[0]
   }
 }

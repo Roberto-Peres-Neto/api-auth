@@ -14,22 +14,23 @@ export class DbAuthentication implements IAuthentication {
     const {email, password } = request
 
     
+    console.log('DbAuthentication.login', request)
     const userLogin = await this.authenticationRepository.authentication({ email, password })
-    
+    console.log('PRIMEIRO', userLogin)
     if (!userLogin) {
       return null
     }
+    console.log('CODIGO', userLogin.userCode)
     const userAccountInformation = await this.loadInformationUserAccountToUserCodeRepository.loadUserInformation({
       userCode: userLogin.userCode
     })
-  
+    console.log('SEGUNDO', userAccountInformation)
+    console.log('NOMEEEE', userAccountInformation.)
     if (!userAccountInformation) {
-      return null
+       throw new Error('User account information not found')
     }
-
     const accessToken = JwtAdapter.generate({
       email: email,
-      name: userLogin.name,
       accountStatus: userLogin.accountStatus,
       userCode: userLogin.userCode,
       accountModel: {
@@ -50,7 +51,11 @@ export class DbAuthentication implements IAuthentication {
           lunchBreakStart: userAccountInformation.employeeDetails.lunchBreakStart,
           position: userAccountInformation.employeeDetails.position,
           salary: userAccountInformation.employeeDetails.salary,
-          workShift: userAccountInformation.employeeDetails.workShift
+          workShift: userAccountInformation.employeeDetails.workShift,
+          employContract: userAccountInformation.employeeDetails.employContract,
+          currentSalary: userAccountInformation.employeeDetails.currentSalary,
+          nextSalaryDate: userAccountInformation.employeeDetails.nextSalaryDate,
+          nextSalaryValue: userAccountInformation.employeeDetails.nextSalaryValue
         },
         personalInformation: {
           cnh: userAccountInformation.personalInformation.cnh,
@@ -77,13 +82,13 @@ export class DbAuthentication implements IAuthentication {
     process.env.JWT_SECRET as string,
   )
 
-
+  console.log('ACCESSTOKEN AQUI :', accessToken)
     return {
-      name: userLogin.name,
       email: userLogin.email,
       userCode: userLogin.userCode,
       accountStatus: userLogin.accountStatus,
-      accessToken: accessToken
+      accessToken: accessToken,
+      accountExpire: userLogin.accountExpire  
     }
   }
 }

@@ -14,13 +14,14 @@ export class LoadLoginController implements Controller {
       if (error) {
         return badRequest(error)
       }
-
-
+      
+      
       request = value
-
+      
       const { email, password } = request
       const userLogin = await this.authentication.login({ email, password })
-
+      console.log('LoadLoginController.handle', request)
+      
       if (!userLogin) {
         return unauthorized()
       }

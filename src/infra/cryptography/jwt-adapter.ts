@@ -2,12 +2,13 @@ import jwt, { SignOptions } from 'jsonwebtoken';
 import type { StringValue } from 'ms';
 import { ILoadInformationUserAccountToUserCodeResponse } from '../../domain/models/account/load-information-user-account-to-user-code';
 
-type AccessTokenPayload = {
+export type AccessTokenPayload = {
   email: string
-  name: string
   userCode: string
   accountStatus: string
   accountModel: ILoadInformationUserAccountToUserCodeResponse
+  roles?: string[]
+  permissions?: string[]
 }
 
 export class JwtAdapter {

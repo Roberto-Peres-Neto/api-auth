@@ -36,10 +36,14 @@ export type ILoadInformationUserAccountToUserCodeResponse = {
     position: string
     salary: number
     workShift: string
+    employContract: string
     costCenterCode: string
     costCenterDescription: string
     lunchBreakDuration: string
     lunchBreakStart: string
     lunchBreakEnd: string
+    currentSalary: string
+    nextSalaryValue: string
+    nextSalaryDate: string
   }
 }
