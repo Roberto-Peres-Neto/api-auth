@@ -18,9 +18,13 @@ export const auth = (subject: string, action: string) => {
       const payload = verify(token, process.env.JWT_SECRET!) as AccessTokenPayload
 
       const user = {
+        userCode: payload.userCode,
         roles: payload.roles || [],
         permissions: payload.permissions || [],
-        userCode: payload.userCode,
+        profile: payload.profile || [],
+        email: payload.email,
+        accountStatus: payload.accountStatus,
+        accountModel: payload.accountModel,
       }
 
       req.user = user

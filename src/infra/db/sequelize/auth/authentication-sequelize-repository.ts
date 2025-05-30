@@ -10,63 +10,121 @@ export class AuthenticationSequelizeRepository implements AuthenticationReposito
     async loadUserInformation (request: LoadInformationUserAccountToUserCodeRepository.Request): Promise<LoadInformationUserAccountToUserCodeRepository.Response | null> {
     const { userCode } = request
     const sql = `
-        SELECT 
-        -- LOGIN_SYSTEM
-        L.USER_CODE userCode,
-        L.LOGIN email,
-        L.ACCOUNT_STATUS accountStatus,
-        L.PASSWORD_EXPIRE passwordExpire,
-        L.ACCOUNT_EXPIRE accountExpire,
+      SELECT 
+        -- Dados do LOGIN_SYSTEM
+        L.USER_CODE AS userCode,
+        L.LOGIN AS email,
+        L.ACCOUNT_STATUS AS accountStatus,
+        L.PASSWORD_EXPIRE AS passwordExpire,
+        L.ACCOUNT_EXPIRE AS accountExpire,
 
         -- USER_PERSONAL_INFORMATION
-        P.COMPLETE_NAME completeName,
-        P.NICKNAME nickname,
-        P.EMAIL_PERSONAL emailPersonal,
-        P.CPF cpf,
-        P.RG tg,
-        P.CNH cnh,
-        P.VOTER_REGISTRATION voterRegistration,
-        P.EMPLOY_CONTRACT employContract,
-        P.PHONE phone,
-        P.DATE_OF_BIRD dateOfBirth,
+        P.COMPLETE_NAME AS completeName,
+        P.NICKNAME AS nickname,
+        P.EMAIL_PERSONAL AS emailPersonal,
+        P.CPF AS cpf,
+        P.RG AS tg,
+        P.CNH AS cnh,
+        P.VOTER_REGISTRATION AS voterRegistration,
+        P.EMPLOY_CONTRACT AS employContract,
+        P.PHONE AS phone,
+        P.DATE_OF_BIRD AS dateOfBirth,
 
         -- USER_ADDRESS_INFORMATION
-        A.STREET street,
-        A.NUMBER number,
-        A.NEIGHBORHOOD neighborhood,
-        A.CITY city,
-        A.STATE [state],
+        A.STREET AS street,
+        A.NUMBER AS number,
+        A.NEIGHBORHOOD AS neighborhood,
+        A.CITY AS city,
+        A.STATE AS [state],
 
         -- USER_RELATIVES
-        R.FATHER_NAME fatherName,
-        R.MOTHER_NAME motherName,
-        R.WIFE_NAME wifeName,
-        R.HOW_MANY_BROTHERS howManyBrothers,
-        R.HOW_MANY_CHILDREN howManyChildren,
+        R.FATHER_NAME AS fatherName,
+        R.MOTHER_NAME AS motherName,
+        R.WIFE_NAME AS wifeName,
+        R.HOW_MANY_BROTHERS AS howManyBrothers,
+        R.HOW_MANY_CHILDREN AS howManyChildren,
 
         -- USER_EMPLOY_DETAILS
-        E.EMAIL_CORPORATIVE emailCorporate,
-        E.ADMISSION_DATE admissionDate,
-        E.POSITION position,
-        E.CURRENT_SALARY currentSalary,
-        E.NEXT_SALARY_VALUE nextSalaryValue,
-        E.NEXT_INCREASE_DATE nextSalaryDate,
-        E.WORK_SHIFT workShift,
-        E.COST_CENTER_CODE costCenterCode,
-        E.COST_CENTER_DESCRIPTION costCenterDescription,
-        E.LUNCH_BREAK_DURATION lunchBreakDuration,
-        E.LUNCH_BREAK_START lunchBreakStart,
-        E.LUNCH_BREAK_END lunchBreakEnd
+        E.EMAIL_CORPORATIVE AS emailCorporate,
+        E.ADMISSION_DATE AS admissionDate,
+        E.POSITION AS position,
+        E.CURRENT_SALARY AS currentSalary,
+        E.NEXT_SALARY_VALUE AS nextSalaryValue,
+        E.NEXT_INCREASE_DATE AS nextSalaryDate,
+        E.WORK_SHIFT AS workShift,
+        E.COST_CENTER_CODE AS costCenterCode,
+        E.COST_CENTER_DESCRIPTION AS costCenterDescription,
+        E.LUNCH_BREAK_DURATION AS lunchBreakDuration,
+        E.LUNCH_BREAK_START AS lunchBreakStart,
+        E.LUNCH_BREAK_END AS lunchBreakEnd,
+
+        -- PERFIS (JSON)
+        (
+          SELECT 
+            P.NAME AS name,
+            P.DESCRIPTION AS profileDescription
+          FROM USER_PROFILES UP
+          INNER JOIN PROFILES P ON P.ID = UP.PROFILE_ID
+          WHERE UP.USER_CODE = L.USER_CODE AND UP.DL = '' AND P.DL = ''
+          FOR JSON PATH
+        ) AS profile,
+
+        -- PERMISSÕES (JSON)
+        (
+          SELECT * FROM (
+            SELECT 
+              PERM.PERMISSAO_SIGLA AS permissaoSigla,
+              PERM.DESCRIPTION AS permissionDesciption
+            FROM USER_PERMISSIONS UP
+            INNER JOIN PERMISSIONS PERM ON PERM.ID = UP.PERMISSION_ID
+            WHERE UP.USER_CODE = L.USER_CODE AND UP.DL = '' AND PERM.DL = ''
+
+            UNION
+
+            SELECT 
+              PERM.PERMISSAO_SIGLA,
+              PERM.DESCRIPTION
+            FROM USER_PROFILES UPR
+            INNER JOIN PROFILE_PERMISSIONS PP ON UPR.PROFILE_ID = PP.PROFILE_ID
+            INNER JOIN PERMISSIONS PERM ON PERM.ID = PP.PERMISSION_ID
+            WHERE UPR.USER_CODE = L.USER_CODE AND UPR.DL = '' AND PP.DL = '' AND PERM.DL = ''
+          ) AS PermissoesUnificadas
+          FOR JSON PATH
+        ) AS permissions,
+
+        -- ROLES (JSON)
+        (
+          SELECT * FROM (
+            SELECT 
+              R.ACTION AS action,
+              R.SUBJECT AS subject
+            FROM USER_ROLES UR
+            INNER JOIN ROLES R ON R.ID = UR.ROLE_ID
+            WHERE UR.USER_CODE = L.USER_CODE AND UR.DL = '' AND R.DL = ''
+
+            UNION
+
+            SELECT 
+              R.ACTION,
+              R.SUBJECT
+            FROM USER_PROFILES UPR
+            INNER JOIN PROFILE_ROLES PR ON PR.PROFILE_ID = UPR.PROFILE_ID
+            INNER JOIN ROLES R ON R.ID = PR.ROLE_ID
+            WHERE UPR.USER_CODE = L.USER_CODE AND UPR.DL = '' AND PR.DL = '' AND R.DL = ''
+          ) AS RolesUnificadas
+          FOR JSON PATH
+        ) AS roles
 
       FROM LOGIN_SYSTEM L
       INNER JOIN USER_PERSONAL_INFORMATION P ON L.USER_CODE = P.USER_CODE
       INNER JOIN USER_ADDRESS_INFORMATION A ON L.USER_CODE = A.USER_CODE
       INNER JOIN USER_RELATIVES R ON L.USER_CODE = R.USER_CODE
       INNER JOIN USER_EMPLOY_DETAILS E ON L.USER_CODE = E.USER_CODE
-
-      WHERE L.DL = '' AND P.DL = '' AND A.DL = '' AND R.DL = '' AND E.DL = ''
+      WHERE 
+        L.DL = '' AND P.DL = '' AND A.DL = '' AND R.DL = '' AND E.DL = ''
         AND L.ACCOUNT_STATUS = 'ATIVO'
         AND L.USER_CODE = :userCode
+
     `
     const replacements = {
       userCode: new String(userCode)
