@@ -12,7 +12,7 @@ export namespace LoadUserPermissionsRepository {
 }
 
 export interface LoadUserRolesRepository {
-  loadUserPermission: (request: LoadUserRolesRepository.Request) => Promise<LoadUserRolesRepository.Response | null>
+  loadUserRole: (request: LoadUserRolesRepository.Request) => Promise<LoadUserRolesRepository.Response | null>
 }
 
 export namespace LoadUserRolesRepository {
@@ -24,7 +24,7 @@ export namespace LoadUserRolesRepository {
 }
 
 export interface LoadUserProfilesRepository {
-  loadUserPermission: (request: LoadUserProfilesRepository.Request) => Promise<LoadUserProfilesRepository.Response | null>
+  loadUserProfile: (request: LoadUserProfilesRepository.Request) => Promise<LoadUserProfilesRepository.Response | null>
 }
 
 export namespace LoadUserProfilesRepository {

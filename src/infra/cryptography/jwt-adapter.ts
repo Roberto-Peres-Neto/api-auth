@@ -8,7 +8,7 @@ export type AccessTokenPayload = {
   accountStatus: string
   accountModel: ILoadInformationUserAccountToUserCodeResponse
   roles: Array<{ action: string; subject: string }>
-  permissions: Array<{ permissaoSigla: string; permissionDesciption: string }>
+  permissions: Array<{ permissionSigla: string; permissionDescription: string }>
   profile: Array<{ name: string; desc: string }>
 }
 

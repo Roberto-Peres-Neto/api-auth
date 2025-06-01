@@ -28,10 +28,10 @@ export class DbAuthentication implements IAuthentication {
 
     const permissionsResult = await this.loadUserPermissionsRepository.loadUserPermission({ userCode: userLogin.userCode }) ?? []
 
-    const rolesResult = await this.loadUserRolesRepository.loadUserPermission({ userCode: userLogin.userCode }) ?? []
+    const rolesResult = await this.loadUserRolesRepository.loadUserRole({ userCode: userLogin.userCode }) ?? []
 
 
-    const profilesResult = await this.loadUserProfilesRepository.loadUserPermission({ userCode: userLogin.userCode }) ?? []
+    const profilesResult = await this.loadUserProfilesRepository.loadUserProfile({ userCode: userLogin.userCode }) ?? []
 
     console.log('CODIGO', userLogin.userCode)
     const userAccountInformation = await this.loadInformationUserAccountToUserCodeRepository.loadUserInformation({
@@ -53,9 +53,10 @@ export class DbAuthentication implements IAuthentication {
         subject: role.subject
       })),
       permissions: (permissionsResult ?? []).map(permission => ({
-        permissaoSigla: permission.permissionSigla,
-        permissionDesciption: permission.permissionDescription
-      })),
+        permissionSigla: permission.permissionSigla,
+        permissionDescription: permission.permissionDescription
+      }))
+      ,
       profile: (profilesResult ?? []).map(profile => ({
         name: profile.name,
         desc: profile.desc
@@ -71,7 +72,10 @@ export class DbAuthentication implements IAuthentication {
       accountStatus: userLogin.accountStatus,
       accessToken: accessToken,
       accountExpire: userLogin.accountExpire,
-      permissions: profilesResult ?? [],
+        permissions: (permissionsResult ?? []).map(permission => ({
+    permissaoSigla: permission.permissionSigla,
+    permissionDesciption: permission.permissionDescription
+  })),
       roles: rolesResult ?? [],
       profile: profilesResult ?? []
     }
