@@ -7,8 +7,9 @@ export type AccessTokenPayload = {
   userCode: string
   accountStatus: string
   accountModel: ILoadInformationUserAccountToUserCodeResponse
-  roles?: string[]
-  permissions?: string[]
+  roles: Array<{ action: string; subject: string }>
+  permissions: Array<{ permissionSigla: string; permissionDescription: string }>
+  profile: Array<{ name: string; desc: string }>
 }
 
 export class JwtAdapter {

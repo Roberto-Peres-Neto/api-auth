@@ -3,11 +3,15 @@ import { IAuthentication } from "../../../domain/usecase";
 import { JwtAdapter } from "../../../infra/cryptography/jwt-adapter";
 import { AuthenticationRepository } from "../../protocols/db";
 import { LoadInformationUserAccountToUserCodeRepository } from "../../protocols/db/account";
+import { LoadUserPermissionsRepository, LoadUserProfilesRepository, LoadUserRolesRepository } from "../../protocols/db/account/load-user-permissions-repository";
 dotenv.config();
 export class DbAuthentication implements IAuthentication {
   constructor(
     private readonly authenticationRepository: AuthenticationRepository,
-    private readonly loadInformationUserAccountToUserCodeRepository: LoadInformationUserAccountToUserCodeRepository
+    private readonly loadInformationUserAccountToUserCodeRepository: LoadInformationUserAccountToUserCodeRepository,
+    private readonly loadUserPermissionsRepository: LoadUserPermissionsRepository,
+    private readonly loadUserRolesRepository: LoadUserRolesRepository,
+    private readonly loadUserProfilesRepository: LoadUserProfilesRepository
   ) { }
 
   async login(request: IAuthentication.Request): Promise<IAuthentication.Response | null> {
@@ -17,9 +21,18 @@ export class DbAuthentication implements IAuthentication {
     console.log('DbAuthentication.login', request)
     const userLogin = await this.authenticationRepository.authentication({ email, password })
     console.log('PRIMEIRO', userLogin)
+
     if (!userLogin) {
       return null
     }
+
+    const permissionsResult = await this.loadUserPermissionsRepository.loadUserPermission({ userCode: userLogin.userCode }) ?? []
+
+    const rolesResult = await this.loadUserRolesRepository.loadUserRole({ userCode: userLogin.userCode }) ?? []
+
+
+    const profilesResult = await this.loadUserProfilesRepository.loadUserProfile({ userCode: userLogin.userCode }) ?? []
+
     console.log('CODIGO', userLogin.userCode)
     const userAccountInformation = await this.loadInformationUserAccountToUserCodeRepository.loadUserInformation({
       userCode: userLogin.userCode
@@ -29,11 +42,25 @@ export class DbAuthentication implements IAuthentication {
     if (!userAccountInformation) {
       throw new Error('User account information not found')
     }
+
     const accessToken = JwtAdapter.generate({
       accountModel: userAccountInformation[0],
       email: userLogin.email,
       accountStatus: userLogin.accountStatus,
       userCode: userLogin.userCode,
+      roles: (rolesResult ?? []).map(role => ({
+        action: role.action,
+        subject: role.subject
+      })),
+      permissions: (permissionsResult ?? []).map(permission => ({
+        permissionSigla: permission.permissionSigla,
+        permissionDescription: permission.permissionDescription
+      }))
+      ,
+      profile: (profilesResult ?? []).map(profile => ({
+        name: profile.name,
+        desc: profile.desc
+      }))
     },
       process.env.JWT_SECRET as string,
     )
@@ -44,7 +71,13 @@ export class DbAuthentication implements IAuthentication {
       userCode: userLogin.userCode,
       accountStatus: userLogin.accountStatus,
       accessToken: accessToken,
-      accountExpire: userLogin.accountExpire
+      accountExpire: userLogin.accountExpire,
+        permissions: (permissionsResult ?? []).map(permission => ({
+    permissaoSigla: permission.permissionSigla,
+    permissionDesciption: permission.permissionDescription
+  })),
+      roles: rolesResult ?? [],
+      profile: profilesResult ?? []
     }
   }
 }
