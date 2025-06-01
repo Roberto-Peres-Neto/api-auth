@@ -1,24 +1,51 @@
 import { SequelizeHelper } from "@rpn-solution/utils-lib";
 import { AuthenticationRepository } from "../../../../data/protocols/db";
 import { LoadInformationUserAccountToUserCodeRepository } from "../../../../data/protocols/db/account";
-import { LoadUserPermissionsRepository, LoadUserProfilesRepository, LoadUserRolesRepository } from "../../../../data/protocols/db/account/load-user-permissions-repository";
+import { GetMenuUserRepository, LoadUserPermissionsRepository, LoadUserProfilesRepository, LoadUserRolesRepository } from "../../../../data/protocols/db/account/load-user-permissions-repository";
 
 export class AuthenticationSequelizeRepository implements AuthenticationRepository, LoadInformationUserAccountToUserCodeRepository,
-  LoadUserPermissionsRepository,LoadUserRolesRepository, LoadUserProfilesRepository {
+  LoadUserPermissionsRepository,LoadUserRolesRepository, LoadUserProfilesRepository, GetMenuUserRepository {
   constructor(
     private readonly sequelize: typeof SequelizeHelper = SequelizeHelper
   ) { }
 
+  async getMenuUser(request: GetMenuUserRepository.Request): Promise<GetMenuUserRepository.Response | null> {
+    const { userCode } = request
+    const sql = `
+
+      SELECT DISTINCT M.*
+      FROM MENUS M
+      JOIN PERMISSION_MENU PM ON PM.MENU_ID = M.ID
+      JOIN USER_PERMISSIONS UP ON UP.PERMISSION_SIGLA = PM.PERMISSION_SIGLA
+      WHERE UP.USER_CODE = :userCode
+        AND ISNULL(M.DL, '') <> '*'
+        AND ISNULL(PM.DL, '') <> '*'
+        AND ISNULL(UP.DL, '') <> '*'
+        AND M.ACTIVE = 1
+      ORDER BY M.ORDER_INDEX;
+
+    `
+    const replacements = {
+      userCode: new String(userCode)
+    }
+    const dbResult = await this.sequelize.query<GetMenuUserRepository.Response[0]>(sql, replacements)
+    if (!dbResult || dbResult.length === 0) {
+      return null
+    }
+    console.log('MENUS', dbResult)
+    return dbResult.length > 0 ? dbResult : null
+  }
+
     async loadUserProfile(request: LoadUserProfilesRepository.Request): Promise<LoadUserProfilesRepository.Response | null> {
     const { userCode } = request
     const sql = `
-    SELECT 
-      P.ID AS profileId,
-      P.NAME AS profileName,
-      P.DESCRIPTION AS profileDescription
-    FROM USER_PROFILES UP WITH (NOLOCK)
-    INNER JOIN PROFILES P ON UP.PROFILE_ID = P.ID
-    WHERE UP.USER_CODE = :userCode AND UP.DL = '' AND P.DL = ''
+      SELECT 
+        P.ID AS profileId,
+        P.NAME AS profileName,
+        P.DESCRIPTION AS profileDescription
+      FROM USER_PROFILES UP WITH (NOLOCK)
+      INNER JOIN PROFILES P ON UP.PROFILE_ID = P.ID
+      WHERE UP.USER_CODE = :userCode AND UP.DL = '' AND P.DL = ''
 
     `
     const replacements = {
@@ -35,24 +62,24 @@ export class AuthenticationSequelizeRepository implements AuthenticationReposito
     async loadUserRole (request: LoadUserRolesRepository.Request): Promise<LoadUserRolesRepository.Response | null> {
     const { userCode } = request
     const sql = `
--- ROLES VINDAS DOS PERFIS
-SELECT DISTINCT 
-  R.ACTION action, 
-  R.SUBJECT subject
-FROM USER_PROFILES UP
-INNER JOIN PROFILE_ROLES PR ON UP.PROFILE_ID = PR.PROFILE_ID
-INNER JOIN ROLES R ON PR.ROLE_ID = R.ID
-WHERE UP.USER_CODE = :userCode AND R.DL = '' AND PR.DL = ''
+      -- ROLES VINDAS DOS PERFIS
+      SELECT DISTINCT 
+        R.ACTION action, 
+        R.SUBJECT subject
+      FROM USER_PROFILES UP
+      INNER JOIN PROFILE_ROLES PR ON UP.PROFILE_ID = PR.PROFILE_ID
+      INNER JOIN ROLES R ON PR.ROLE_ID = R.ID
+      WHERE UP.USER_CODE = :userCode AND R.DL = '' AND PR.DL = ''
 
-UNION
+      UNION
 
--- ROLES DIRETAS DO USUÁRIO
-SELECT 
-  R.ACTION action, 
-  R.SUBJECT subject
-FROM USER_ROLES UR
-INNER JOIN ROLES R ON R.ID = UR.ROLE_ID
-WHERE UR.USER_CODE = :userCode AND R.DL = '' AND UR.DL = ''
+      -- ROLES DIRETAS DO USUÁRIO
+      SELECT 
+        R.ACTION action, 
+        R.SUBJECT subject
+      FROM USER_ROLES UR
+      INNER JOIN ROLES R ON R.ID = UR.ROLE_ID
+      WHERE UR.USER_CODE = :userCode AND R.DL = '' AND UR.DL = ''
 
     `
     const replacements = {
@@ -69,25 +96,31 @@ WHERE UR.USER_CODE = :userCode AND R.DL = '' AND UR.DL = ''
   async loadUserPermission(request: LoadUserPermissionsRepository.Request): Promise<LoadUserPermissionsRepository.Response | null> {
     const { userCode } = request
     const sql = `
--- PERMISSÕES VINDAS DO PERFIL
-SELECT DISTINCT 
-  PERM.PERMISSAO_SIGLA AS permissionSigla, 
-  PERM.DESCRIPTION AS permissionDescription
-FROM USER_PROFILES UP
-INNER JOIN PROFILE_PERMISSIONS PP ON UP.PROFILE_ID = PP.PROFILE_ID
-INNER JOIN PERMISSIONS PERM ON PERM.ID = PP.PERMISSION_ID
-WHERE UP.USER_CODE = :userCode AND UP.DL = '' AND PERM.DL = '' AND PP.DL = ''
+      -- PERMISSÕES POR PERFIL
+      SELECT DISTINCT 
+        PERM.PERMISSAO_SIGLA AS permissionSigla, 
+        PERM.DESCRIPTION AS permissionDescription
+      FROM USER_PROFILES UP
+      INNER JOIN PROFILE_PERMISSIONS PP ON PP.PROFILE_ID = UP.PROFILE_ID
+      INNER JOIN PERMISSIONS PERM ON PERM.ID = PP.PERMISSION_ID
+      WHERE 
+        UP.USER_CODE = :userCode
+        AND ISNULL(UP.DL, '') <> '*'
+        AND ISNULL(PP.DL, '') <> '*'
+        AND ISNULL(PERM.DL, '') <> '*'
 
-UNION
+      UNION
 
--- PERMISSÕES DIRETAS DO USUÁRIO
-SELECT 
-  PERM.PERMISSAO_SIGLA, 
-  PERM.DESCRIPTION AS permissionDescription
-FROM USER_PERMISSIONS UP
-INNER JOIN PERMISSIONS PERM ON PERM.ID = UP.PERMISSION_ID
-WHERE UP.USER_CODE = :userCode AND UP.DL = '' AND PERM.DL = ''
-
+      -- PERMISSÕES DIRETAS DO USUÁRIO
+      SELECT 
+        UP.PERMISSION_SIGLA AS permissionSigla,
+        PERM.DESCRIPTION AS permissionDescription
+      FROM USER_PERMISSIONS UP
+      INNER JOIN PERMISSIONS PERM ON PERM.PERMISSAO_SIGLA = UP.PERMISSION_SIGLA
+      WHERE 
+        UP.USER_CODE =  :userCode
+        AND ISNULL(UP.DL, '') <> '*'
+        AND ISNULL(PERM.DL, '') <> '*'
     `
     const replacements = {
       userCode: new String(userCode)
@@ -170,7 +203,7 @@ WHERE UP.USER_CODE = :userCode AND UP.DL = '' AND PERM.DL = ''
               PERM.PERMISSAO_SIGLA AS permissaoSigla,
               PERM.DESCRIPTION AS permissionDesciption
             FROM USER_PERMISSIONS UP
-            INNER JOIN PERMISSIONS PERM ON PERM.ID = UP.PERMISSION_ID
+INNER JOIN PERMISSIONS PERM ON PERM.PERMISSAO_SIGLA = UP.PERMISSION_SIGLA
             WHERE UP.USER_CODE = L.USER_CODE AND UP.DL = '' AND PERM.DL = ''
 
             UNION

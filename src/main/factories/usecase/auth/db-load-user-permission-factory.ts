@@ -5,5 +5,5 @@ import { AuthenticationSequelizeRepository } from "../../../../infra/db/sequeliz
 
 export const makeDbAuthenticationFactory = (): IAuthentication => {
   const authUser = new AuthenticationSequelizeRepository()
-  return new DbAuthentication(authUser,authUser,authUser,authUser,authUser)
+  return new DbAuthentication(authUser,authUser,authUser,authUser,authUser,authUser)
 }
