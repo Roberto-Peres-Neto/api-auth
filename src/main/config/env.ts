@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 export default {
-  sqlHost: process.env.SQL_HOST || '172.18.18.112',
+  sqlHost: process.env.SQL_HOST || '172.18.120.129',
   sqlDataBase: process.env.SQL_DATABASE || 'SGBDDEV',
   sqlUsername: process.env.SQL_USERNAME || 'services-erp',
   sqlPassword: process.env.SQL_PASSWORD || '2526131v',
@@ -12,7 +12,7 @@ export default {
 
   jwtSecret: process.env.JWT_SECRET || 'F4V3N1@2024#Boliche@2033@7VkecWpCEViU46vtiKS4LNROqD7U5XbZ',
 
-  mongoUrl: process.env.MONGO_URL || 'mongodb://172.18.18.112:27017/ERP',
+  mongoUrl: process.env.MONGO_URL || 'mongodb://172.18.120.129:27017/ERP',
 
   appPort: process.env.APP_PORT || 5050
 }

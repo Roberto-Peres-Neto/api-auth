@@ -26,7 +26,7 @@ export class LoadLoginController implements Controller {
         return unauthorized()
       }
 
-      return ok({ userLogin })
+      return ok( userLogin )
     } catch (error) {
       return serverError(error as Error)
     }
