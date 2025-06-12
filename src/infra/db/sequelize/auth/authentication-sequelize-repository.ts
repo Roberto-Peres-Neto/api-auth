@@ -13,16 +13,26 @@ export class AuthenticationSequelizeRepository implements AuthenticationReposito
     const { userCode } = request
     const sql = `
 
-      SELECT DISTINCT M.*
+      SELECT DISTINCT 
+          M.ID AS id,
+          M.NAME AS name,
+          M.ROUTE AS routes,
+          M.ICON AS icon,
+          M.TYPE AS type,
+          M.PARENT_ID AS parentId,
+          M.ACTION AS action,
+          M.SUBJECT AS subject,
+          M.ORDER_INDEX AS [order]
       FROM MENUS M
       JOIN PERMISSION_MENU PM ON PM.MENU_ID = M.ID
       JOIN USER_PERMISSIONS UP ON UP.PERMISSION_SIGLA = PM.PERMISSION_SIGLA
-      WHERE UP.USER_CODE = :userCode
+      WHERE UP.USER_CODE = 'A01'
         AND ISNULL(M.DL, '') <> '*'
         AND ISNULL(PM.DL, '') <> '*'
         AND ISNULL(UP.DL, '') <> '*'
         AND M.ACTIVE = 1
       ORDER BY M.ORDER_INDEX;
+
 
     `
     const replacements = {

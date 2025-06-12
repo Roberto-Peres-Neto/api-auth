@@ -85,7 +85,8 @@ export class DbAuthentication implements IAuthentication {
       })),
       roles: rolesResult ?? [],
       profile: profilesResult ?? [],
-      menus: menusResult ?? []
+      menus: menusResult ?? [],
+      accountModel: userAccountInformation[0]
     }
   }
 }

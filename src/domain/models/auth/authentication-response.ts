@@ -1,3 +1,4 @@
+import { ILoadInformationUserAccountToUserCodeResponse } from "../account/load-information-user-account-to-user-code"
 
 export type AuthenticationAccountModelResponse = {
   email: string
@@ -8,6 +9,7 @@ export type AuthenticationAccountModelResponse = {
   roles: Array<{ action: string; subject: string }>
   permissions: Array<{ permissaoSigla: string; permissionDesciption: string }>
   profile: Array<{ name: string; desc: string }>
+  accountModel: ILoadInformationUserAccountToUserCodeResponse
   menus: Array<{
     id: string
     name: string
